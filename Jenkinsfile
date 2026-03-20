@@ -123,12 +123,10 @@ pipeline {
 
     post {
         always {
-            stage('Store Scan report locally') {
-                sh '''
-                    mkdir -p reports
-                    cp report.txt reports/ || true
-                '''
-            }
+            sh '''
+                mkdir -p reports
+                cp report.txt reports/ || true
+            '''
             echo "Pipeline completed"
             archiveArtifacts artifacts: 'reports/**/*, *.json, target/dependency-check-report.*', allowEmptyArchive: true
             cleanWs()
