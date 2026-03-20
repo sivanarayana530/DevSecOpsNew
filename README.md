@@ -2,6 +2,7 @@ docker rm -f kind-proxy-spring ; docker run -d --name kind-proxy-spring --networ
 
 
 
+docker exec jenkins cat /var/jenkins_home/workspace/devops/reports/ai_security_analysis.md
 
 
 # DevSecOps-Project
