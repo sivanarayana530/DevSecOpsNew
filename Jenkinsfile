@@ -24,6 +24,14 @@ pipeline {
             }
         }
         
+        stage('OWASP Dependency Check') {
+            steps {
+                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                    sh 'mvn org.owasp:dependency-check-maven:check -Dformat=ALL -DnvdApiKey=$NVD_API_KEY || true'
+                }
+            }
+        }
+        
         stage('SonarQube Analysis'){
             steps{
                 withSonarQubeEnv('SonarQube-server') {
@@ -108,7 +116,7 @@ pipeline {
     post {
         always {
             echo "Pipeline completed"
-            archiveArtifacts artifacts: 'reports/*, *.json', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'reports/*, *.json, target/dependency-check-report.*', allowEmptyArchive: true
         }
     }
 }

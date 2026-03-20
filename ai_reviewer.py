@@ -32,10 +32,12 @@ def generate_report():
     gitleaks_report = read_file("gitleaks-report.json")
     semgrep_report = read_file("semgrep-report.json")
     trivy_report = read_file("report.txt")
+    dependency_check_report = read_file("target/dependency-check-report.json")
     
     if gitleaks_report == "Report not generated or could not be read." and \
        semgrep_report == "Report not generated or could not be read." and \
-       trivy_report == "Report not generated or could not be read.":
+       trivy_report == "Report not generated or could not be read." and \
+       dependency_check_report == "Report not generated or could not be read.":
        print("No security reports found to analyze.")
        sys.exit(0)
 
@@ -46,7 +48,7 @@ def generate_report():
 
     client = genai.Client(api_key=api_key)
     prompt = f"""
-    You are an expert DevSecOps and Security engineer. Please analyze the following security scan results from three different tools: Gitleaks (Secrets), Semgrep (SAST), and Trivy (Container Vulnerabilities).
+    You are an expert DevSecOps and Security engineer. Please analyze the following security scan results from four different tools: Gitleaks (Secrets), Semgrep (SAST), Trivy (Container Vulnerabilities), and OWASP Dependency-Check (SCA).
     Provide a unified summary report for the developers. Your report should clearly highlight:
     1. Critical and High severity issues.
     2. A brief analysis of what the vulnerabilities are.
@@ -61,6 +63,9 @@ def generate_report():
     
     =========== TRIVY REPORT ===========
     {trivy_report}
+    
+    =========== OWASP DEPENDENCY-CHECK REPORT ===========
+    {dependency_check_report}
     """
     
     print("Sending reports to Gemini API for analysis...")
