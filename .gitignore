@@ -1,0 +1,5 @@
+target/classes/com/example/demo/DemoApplication.class
+target/classes/application.properties
+
+# Ignore DevSecOps environment variables file
+.env
