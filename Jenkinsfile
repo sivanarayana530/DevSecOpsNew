@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('Checkout git') {
             steps {
-               git branch: 'main', url: 'https://github.com/sivanarayana530/DevSecOps-project.git'
+               git branch: 'main', url: 'https://github.com/sivanarayana530/DevSecOpsNew.git'
             }
         }
         
