@@ -56,7 +56,7 @@ pipeline {
 
         stage('Image Scan') {
             steps {
-                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --format table praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} > report.txt || true"
+                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 15m --format table praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} > report.txt || true"
             }
         }
 
