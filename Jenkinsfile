@@ -69,7 +69,7 @@ pipeline {
         stage('AI Vulnerability Analysis with Gemini') {
             steps {
                 withCredentials([string(credentialsId: 'gemini-api-key', variable: 'GEMINI_API_KEY')]) {
-                    sh 'docker run --rm --volumes-from jenkins -w "${WORKSPACE}" -e GEMINI_API_KEY="${GEMINI_API_KEY}" python:3.9 bash -c "pip install google-generativeai && python ai_reviewer.py || true"'
+                    sh 'docker run --rm --volumes-from jenkins -w "${WORKSPACE}" -e GEMINI_API_KEY="${GEMINI_API_KEY}" python:3.9 bash -c "pip install google-genai python-dotenv && python ai_reviewer.py || true"'
                 }
             }
         }
