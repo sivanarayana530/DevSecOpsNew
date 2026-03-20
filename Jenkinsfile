@@ -44,7 +44,7 @@ pipeline {
         
         stage('Semgrep SAST Scan') {
             steps {
-                sh 'docker run --rm --volumes-from jenkins -w "${WORKSPACE}" returntocorp/semgrep semgrep scan --config auto --json -o "${WORKSPACE}/semgrep-report.json" || true'
+                sh 'docker run --rm --volumes-from jenkins -w "${WORKSPACE}" python:3.9 bash -c "pip install semgrep && semgrep scan --config auto --json -o semgrep-report.json || true"'
             }
         }
         
