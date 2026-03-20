@@ -62,23 +62,31 @@ pipeline {
             }
         }
 
-        stage('Image Scan') {
+        stage('Image Scan (Trivy)') {
             steps {
+                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 15m --format json --output trivy-report.json praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} || true"
                 sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 15m --format table praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} > report.txt || true"
             }
         }
 
-        stage('Store Scan report locally') {
-             steps {
-                 sh 'mkdir -p reports && cp report.txt reports/'
-             }
-         }
-
         stage('AI Vulnerability Analysis with Gemini') {
             steps {
                 withCredentials([string(credentialsId: 'gemini-api-key', variable: 'GEMINI_API_KEY')]) {
-                    sh 'docker run --rm --volumes-from jenkins -w "${WORKSPACE}" -e GEMINI_API_KEY="${GEMINI_API_KEY}" python:3.9 bash -c "pip install google-genai python-dotenv && python ai_reviewer.py || true"'
+                    sh 'docker run --rm --volumes-from jenkins -w "${WORKSPACE}" -e GEMINI_API_KEY="${GEMINI_API_KEY}" python:3.9 bash -c "pip install google-genai python-dotenv && python data_aggregator.py && python ai_reviewer.py || true"'
                 }
+            }
+        }
+        
+        stage('Build React Dashboard') {
+            steps {
+                sh '''
+                    cp reports/security-data.json dashboard-ui/src/ || echo "{}" > dashboard-ui/src/security-data.json
+                    cd dashboard-ui
+                    npm install
+                    npm run build
+                    mkdir -p ../reports/dashboard
+                    cp -r dist/* ../reports/dashboard/
+                '''
             }
         }
 
@@ -115,8 +123,15 @@ pipeline {
 
     post {
         always {
+            stage('Store Scan report locally') {
+                sh '''
+                    mkdir -p reports
+                    cp report.txt reports/ || true
+                '''
+            }
             echo "Pipeline completed"
-            archiveArtifacts artifacts: 'reports/*, *.json, target/dependency-check-report.*', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'reports/**/*, *.json, target/dependency-check-report.*', allowEmptyArchive: true
+            cleanWs()
         }
     }
 }
