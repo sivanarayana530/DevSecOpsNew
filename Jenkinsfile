@@ -9,7 +9,7 @@ pipeline {
         
         stage('Gitleaks Secrets Scan') {
             steps {
-                sh 'docker run --rm -v ${WORKSPACE}:/path zricethezav/gitleaks:latest detect --source="/path" -v --report-format json --report-path /path/gitleaks-report.json || true'
+                sh 'docker run --rm --volumes-from jenkins -w "${WORKSPACE}" zricethezav/gitleaks:latest detect --source="${WORKSPACE}" -v --report-format json --report-path "${WORKSPACE}/gitleaks-report.json" || true'
             }
         }
         
@@ -44,7 +44,7 @@ pipeline {
         
         stage('Semgrep SAST Scan') {
             steps {
-                sh 'docker run --rm -v "${WORKSPACE}:/src" returntocorp/semgrep semgrep scan --config auto --json -o /src/semgrep-report.json || true'
+                sh 'docker run --rm --volumes-from jenkins -w "${WORKSPACE}" returntocorp/semgrep semgrep scan --config auto --json -o "${WORKSPACE}/semgrep-report.json" || true'
             }
         }
         
@@ -69,7 +69,7 @@ pipeline {
         stage('AI Vulnerability Analysis with Gemini') {
             steps {
                 withCredentials([string(credentialsId: 'gemini-api-key', variable: 'GEMINI_API_KEY')]) {
-                    sh 'docker run --rm -v "${WORKSPACE}:/app" -w /app -e GEMINI_API_KEY="${GEMINI_API_KEY}" python:3.9 bash -c "pip install google-generativeai && python ai_reviewer.py || true"'
+                    sh 'docker run --rm --volumes-from jenkins -w "${WORKSPACE}" -e GEMINI_API_KEY="${GEMINI_API_KEY}" python:3.9 bash -c "pip install google-generativeai && python ai_reviewer.py || true"'
                 }
             }
         }
