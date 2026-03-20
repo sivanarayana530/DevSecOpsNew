@@ -108,6 +108,7 @@ pipeline {
     post {
         always {
             echo "Pipeline completed"
+            archiveArtifacts artifacts: 'reports/*, *.json', allowEmptyArchive: true
         }
     }
 }
