@@ -14,7 +14,6 @@ pipeline {
         }
         
         stage ('Build & JUnit Test') {
-            when { expression { return false } }
             steps {
                 sh 'mvn install' 
             }
@@ -26,7 +25,6 @@ pipeline {
         }
         
         stage('OWASP Dependency Check') {
-            when { expression { return false } }
             steps {
                 withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
                     sh 'mvn dependency-check:check -Dnvd.api.key="$NVD_API_KEY" || true'
@@ -35,7 +33,6 @@ pipeline {
         }
         
         stage('SonarQube Analysis'){
-            when { expression { return false } }
             steps{
                 withSonarQubeEnv('SonarQube-server') {
                     withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
@@ -46,7 +43,6 @@ pipeline {
         }
 
         stage("Quality Gate") {
-            when { expression { return false } }
             steps {
               timeout(time: 1, unit: 'HOURS') {
                 waitForQualityGate abortPipeline: true
@@ -55,21 +51,18 @@ pipeline {
         }
         
         stage('Semgrep SAST Scan') {
-            when { expression { return false } }
             steps {
                 sh 'docker run --rm --volumes-from jenkins -w "${WORKSPACE}" python:3.9 bash -c "pip install semgrep && semgrep scan --config auto --json -o semgrep-report.json || true"'
             }
         }
         
         stage('Docker Build') {
-            when { expression { return false } }
             steps {
                 sh "docker build -t praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} ."
             }
         }
 
         stage('Image Scan (Trivy)') {
-            when { expression { return false } }
             steps {
                 sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 15m --format json --output trivy-report.json praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} || true"
                 sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 15m --format table praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} > report.txt || true"
@@ -77,7 +70,6 @@ pipeline {
         }
 
         stage('AI Vulnerability Analysis with Gemini') {
-            when { expression { return false } }
             steps {
                 withCredentials([string(credentialsId: 'gemini-api-key', variable: 'GEMINI_API_KEY')]) {
                     sh 'docker run --rm --volumes-from jenkins -w "${WORKSPACE}" -e GEMINI_API_KEY="${GEMINI_API_KEY}" python:3.9 bash -c "pip install google-genai python-dotenv && python data_aggregator.py && python ai_reviewer.py || true"'
@@ -97,14 +89,12 @@ pipeline {
         }
 
         stage('Docker Push') {
-            when { expression { return false } }
             steps {
                 sh 'echo "Skipping Docker push to avoid needing credentials"'
             }
         }
 
         stage('Deploy to k8s') {
-            when { expression { return false } }
             steps {
                 script {
                     // 1. Create cluster if not exists
