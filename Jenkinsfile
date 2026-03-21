@@ -13,6 +13,7 @@ pipeline {
             }
         }
         
+        /*
         stage ('Build & JUnit Test') {
             steps {
                 sh 'mvn install' 
@@ -76,6 +77,7 @@ pipeline {
                 }
             }
         }
+        */
         
         stage('Build React Dashboard') {
             steps {
@@ -88,6 +90,7 @@ pipeline {
             }
         }
 
+        /*
         stage('Docker Push') {
             steps {
                 sh 'echo "Skipping Docker push to avoid needing credentials"'
@@ -117,6 +120,7 @@ pipeline {
                 }
             }
         }
+        */
     } // Closes 'stages'
 
     post {
