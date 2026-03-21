@@ -79,14 +79,19 @@ pipeline {
         
         stage('Build React Dashboard') {
             steps {
-                sh '''
-                    cp reports/security-data.json dashboard-ui/src/ || echo "{}" > dashboard-ui/src/security-data.json
-                    cd dashboard-ui
-                    npm install
-                    npm run build
-                    mkdir -p ../reports/dashboard
-                    cp -r dist/* ../reports/dashboard/
-                '''
+                script {
+                    docker.image('node:18-alpine').inside {
+                        sh '''
+                            mkdir -p dashboard-ui/src/
+                            cp reports/security-data.json dashboard-ui/src/ || echo "{}" > dashboard-ui/src/security-data.json
+                            cd dashboard-ui
+                            npm install
+                            npm run build
+                            mkdir -p ../reports/dashboard
+                            cp -r dist/* ../reports/dashboard/ || cp -r build/* ../reports/dashboard/
+                        '''
+                    }
+                }
             }
         }
 
@@ -99,27 +104,20 @@ pipeline {
         stage('Deploy to k8s') {
             steps {
                 script {
-                    // 1. Create cluster if not exists
                     sh 'kind create cluster --name devsecops-cluster --config kind-config.yaml || true'
-                    
-                    // 2. Load the image directly into Kind
                     sh "kind load docker-image praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} --name devsecops-cluster"
-                    
-                    // 3. Get the internal IP and create a temporary config for this build
                     sh '''
                         KIND_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' devsecops-cluster-control-plane)
                         kind get kubeconfig --name devsecops-cluster > build-kubeconfig
                         sed -i "s/127.0.0.1.*/$KIND_IP:6443/g" build-kubeconfig
                     '''
-                    
-                    // 4. Use the specific config for deployment
                     sh "sed -i 's/latest/v1.${env.BUILD_ID}/g' spring-boot-deployment.yaml"
                     sh 'KUBECONFIG=./build-kubeconfig kubectl apply -f spring-boot-deployment.yaml'
                     sh 'KUBECONFIG=./build-kubeconfig kubectl rollout status deployment/spring-app-deployment'
                 }
             }
         }
-    } // Closes 'stages'
+    } 
 
     post {
         always {
