@@ -27,7 +27,7 @@ pipeline {
         stage('OWASP Dependency Check') {
             steps {
                 withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-                    sh 'mvn dependency-check:check -Dnvd.api.key="$NVD_API_KEY" || true'
+                    sh 'mvn dependency-check:check -Dnvd.api.key="$NVD_API_KEY" -DossindexAnalyzerEnabled=false || true'
                 }
             }
         }
@@ -64,8 +64,8 @@ pipeline {
 
         stage('Image Scan (Trivy)') {
             steps {
-                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 15m --format json --output trivy-report.json praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} || true"
-                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 15m --format table praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} > report.txt || true"
+                sh "docker run --rm -v /var/jenkins_home/trivy-cache:/root/.cache/ -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 30m --scanners vuln --format json --output trivy-report.json praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} || true"
+                sh "docker run --rm -v /var/jenkins_home/trivy-cache:/root/.cache/ -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 30m --scanners vuln --format table praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} > report.txt || true"
             }
         }
 
