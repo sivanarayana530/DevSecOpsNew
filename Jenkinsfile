@@ -58,14 +58,14 @@ pipeline {
         
         stage('Docker Build') {
             steps {
-                sh "docker build -t praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} ."
+                sh "docker build -t team/sprint-boot-app:v1.${env.BUILD_ID} ."
             }
         }
 
         stage('Image Scan (Trivy)') {
             steps {
-                sh "docker run --rm -v /var/jenkins_home/trivy-cache:/root/.cache/ -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 30m --scanners vuln --format json --output trivy-report.json praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} || true"
-                sh "docker run --rm -v /var/jenkins_home/trivy-cache:/root/.cache/ -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 30m --scanners vuln --format table praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} > report.txt || true"
+                sh "docker run --rm -v /var/jenkins_home/trivy-cache:/root/.cache/ -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 30m --scanners vuln --format json --output trivy-report.json team/sprint-boot-app:v1.${env.BUILD_ID} || true"
+                sh "docker run --rm -v /var/jenkins_home/trivy-cache:/root/.cache/ -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --timeout 30m --scanners vuln --format table team/sprint-boot-app:v1.${env.BUILD_ID} > report.txt || true"
             }
         }
 
@@ -101,7 +101,7 @@ pipeline {
                     sh 'kind create cluster --name devsecops-cluster --config kind-config.yaml || true'
                     
                     // 2. Load the image directly into Kind
-                    sh "kind load docker-image praveensirvi/sprint-boot-app:v1.${env.BUILD_ID} --name devsecops-cluster"
+                    sh "kind load docker-image team/sprint-boot-app:v1.${env.BUILD_ID} --name devsecops-cluster"
                     
                     // 3. Get the internal IP and create a temporary config for this build
                     sh '''
