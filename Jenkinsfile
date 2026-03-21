@@ -81,11 +81,9 @@ pipeline {
             steps {
                 sh '''
                     cp reports/security-data.json dashboard-ui/src/ || echo "{}" > dashboard-ui/src/security-data.json
-                    cd dashboard-ui
-                    npm install
-                    npm run build
-                    mkdir -p ../reports/dashboard
-                    cp -r dist/* ../reports/dashboard/
+                    docker run --rm --volumes-from jenkins -w "${WORKSPACE}/dashboard-ui" node:18 sh -c "npm install && npm run build"
+                    mkdir -p reports/dashboard
+                    cp -r dashboard-ui/dist/* reports/dashboard/ || true
                 '''
             }
         }
